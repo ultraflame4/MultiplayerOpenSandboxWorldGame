@@ -42,8 +42,9 @@ class ConnectionHandler:
     @EventsHandler.SubscribeEvent.quit
     def stopListener(event):
         ConnectionHandler.listening=False
-        ConnectionHandler.send("client/exit")
-        ConnectionHandler.client.close()
+        if ConnectionHandler.client is not None:
+            ConnectionHandler.send("client/exit")
+            ConnectionHandler.client.close()
 
 
     @staticmethod
