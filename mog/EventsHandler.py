@@ -99,7 +99,6 @@ def physicsLoop():
     clock = pygame.time.Clock()
 
     while SubscribeEvent.EventRun:
-        clock.tick(30)
 
         keys = pygame.key.get_pressed()
 
@@ -108,3 +107,5 @@ def physicsLoop():
 
         for i in physics_callbacks:
             i()
+
+        clock.tick(60)

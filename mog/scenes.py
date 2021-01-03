@@ -9,19 +9,19 @@ class baseScene(pygame.Surface):
     def __init__(self,window:pygame.Surface):
         pygame.Surface.__init__(self, WINDOW_SIZE)
         self.window = window
-        self.run=False
+        self.isActive=False
         self.bg = (0,0,0)
         EventsHandler.SubscribeEvent.quit(self.killScene)
 
 
     def runScene(self):
-        self.run=True
+        self.isActive=True
         self.updateLoop()
 
 
     def killScene(self,event):
         print(f"{self.__class__.__name__} : killing scene")
-        self.run=False
+        self.isActive=False
 
 
     def clearSurface(self):
@@ -36,8 +36,12 @@ class baseScene(pygame.Surface):
         """
         pass
 
+    def _preLoop(self):
+        pass
+
     def updateLoop(self):
-        while self.run:
+        self._preLoop()
+        while self.isActive:
             self.clearSurface()
             self.update()
             self.updateToWindow()
@@ -93,10 +97,13 @@ class GameScene(baseScene):
     def __init__(self,window):
         baseScene.__init__(self,window)
         self.bg = (245,245,245)
-        self.client_player = game.Player()
+        self.world = game.World(self)
+
+    def _preLoop(self):
+        self.world.init()
 
     def update(self):
-        self.client_player.draw(self)
+        self.world.draw(self)
 
 
 
