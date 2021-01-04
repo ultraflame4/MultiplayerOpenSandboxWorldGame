@@ -55,7 +55,7 @@ class World:
             start = time.time()
             invoke(self.sendPosToAllPlayers)
 
-            time.sleep(max(1. / 25 - (time.time() - start), 0))
+            time.sleep(max(1. / 60 - (time.time() - start), 0))
 
 class Manager:
     world = World()
