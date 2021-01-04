@@ -2,16 +2,35 @@ import json
 
 import pygame
 
-from mog import EventsHandler, network
+from mog import EventsHandler, network, widgets
+
+
+class WorldCamera:
+    def __init__(self,surface:pygame.Surface):
+        self.center = pygame.Vector2(surface.get_width()/2,surface.get_height()/2)
+        self.pos = pygame.Vector2(0,0)
+
+
+    def moveCamera(self,x,y):
+        self.pos.x = x - self.center.x
+        self.pos.y = y - self.center.y
+
+
+    def caclPos(self,x,y):
+        return x - self.pos.x,y - self.pos.y
+
+
+    def caclRectPos(self,rect):
+        return rect.centerx-self.pos.x,rect.centery-self.pos.y,rect.w,rect.h
 
 
 class Player(pygame.Rect):
-    def __init__(self,scene):
+    def __init__(self,scene,cam:WorldCamera):
         pygame.Rect.__init__(self,0,0,100,100)
-
         self.move_vel=9
         self.color=(0,0,0)
         self.scene = scene
+        self.cam = cam
 
         self.velocity = [0,0]
 
@@ -36,7 +55,9 @@ class Player(pygame.Rect):
         elif self.velocity[1] < 0:
             self.velocity[1] += 1
 
+        self.cam.moveCamera(self.x,self.y)
         self.sendCoordsToServer()
+
 
     def sendCoordsToServer(self):
         network.ConnectionHandler.send(f"player/pos:{[self.x,self.y]}")
@@ -62,13 +83,22 @@ class Player(pygame.Rect):
                 self.addForce(self.move_vel * 1, 0)
 
     def draw(self,surface):
-        pygame.draw.rect(surface,self.color,self)
+        pygame.draw.rect(surface,self.color,self.cam.caclRectPos(self))
+
+
+
+
+
+
 
 
 class World:
     def __init__(self,scene):
+        self.coords_ui = widgets.Text("None",30,scene,(0,0))
+
         self.scene = scene
-        self.player = Player(scene)
+        self.camera = WorldCamera(scene)
+        self.player = Player(scene,self.camera)
         self.otherPlayersPos=[]
         self.surface = scene
         network.DataCallbacks.players_pos=self.updateOtherPlayerPositions
@@ -81,15 +111,21 @@ class World:
             self.otherPlayersPos.append(v)
 
 
+    def drawUiCoords(self):
+        self.coords_ui.text=self.coords_ui.font.render(
+            f"x: {self.player.x}, y: {self.player.y}, vel:{self.player.velocity}", True, (0,0,0), None)
+        self.coords_ui.drawText()
+
     def drawOtherPlayers(self):
         for coords in self.otherPlayersPos:
-            pygame.draw.rect(self.surface,(0,0,0),coords+[100,100])
+            pygame.draw.rect(self.surface,(0,0,0),self.camera.caclPos(*coords)+(100,100))
 
 
     def init(self):
         self.player.init()
 
     def draw(self,surface):
+        self.drawUiCoords()
         self.player.draw(surface)
         self.drawOtherPlayers()
 
