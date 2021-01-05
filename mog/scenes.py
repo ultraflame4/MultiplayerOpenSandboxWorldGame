@@ -65,7 +65,7 @@ class ServerMenu(baseScene):
 
         self.serveriptext = widgets.Text("Server Ip Address",50,self,(0,60+offset),centerHorizontal=True)
 
-        self.serveriptextinput = widgets.TextInput(30,self,(0,150+offset),centerHorizontal=True)
+        self.serveriptextinput = widgets.TextInput(30,self,(0,150+offset),centerHorizontal=True,text="localhost")
 
 
         self.serverporttext = widgets.Text("Server Port", 50, self, (0, 210+offset), centerHorizontal=True)

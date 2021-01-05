@@ -9,6 +9,7 @@ class WorldCamera:
     def __init__(self,surface:pygame.Surface):
         self.center = pygame.Vector2(surface.get_width()/2,surface.get_height()/2)
         self.pos = pygame.Vector2(0,0)
+        self.scale=1.0
 
 
     def moveCamera(self,x,y):
@@ -16,13 +17,11 @@ class WorldCamera:
         self.pos.y = y - self.center.y
 
 
-    def caclPos(self,x,y):
-        return x - self.pos.x,y - self.pos.y
+    def caclRectDimension(self,rect):
+        return rect.x-self.pos.x,rect.y-self.pos.y,rect.w,rect.h
 
-
-    def caclRectPos(self,rect):
-        return rect.centerx-self.pos.x,rect.centery-self.pos.y,rect.w,rect.h
-
+    def caclRawRectDimension(self,x,y,w,h):
+        return x - self.pos.x, y - self.pos.y, w, h
 
 class Player(pygame.Rect):
     def __init__(self,scene,cam:WorldCamera):
@@ -55,7 +54,7 @@ class Player(pygame.Rect):
         elif self.velocity[1] < 0:
             self.velocity[1] += 1
 
-        self.cam.moveCamera(self.x,self.y)
+        self.cam.moveCamera(self.centerx,self.centery)
         self.sendCoordsToServer()
 
 
@@ -83,14 +82,20 @@ class Player(pygame.Rect):
                 self.addForce(self.move_vel * 1, 0)
 
     def draw(self,surface):
-        pygame.draw.rect(surface,self.color,self.cam.caclRectPos(self))
+        pygame.draw.rect(surface, self.color, self.cam.caclRectDimension(self))
 
 
 
 
 
+class worldObject(pygame.Rect):
+    def __init__(self,worldcamera,spawn_x,spawn_y,width,height,color=(100,100,100)):
+        pygame.Rect.__init__(self,spawn_x,spawn_y,width,height)
+        self.cam:WorldCamera = worldcamera
+        self.color = color
 
-
+    def draw(self,surface):
+        pygame.draw.rect(surface, self.color, self.cam.caclRectDimension(self))
 
 class World:
     def __init__(self,scene):
@@ -100,7 +105,10 @@ class World:
         self.camera = WorldCamera(scene)
         self.player = Player(scene,self.camera)
         self.otherPlayersPos=[]
+
         self.surface = scene
+
+
         network.DataCallbacks.players_pos=self.updateOtherPlayerPositions
         network.DataCallbacks.players_clear=self.otherPlayersPos.clear
 
@@ -113,12 +121,13 @@ class World:
 
     def drawUiCoords(self):
         self.coords_ui.text=self.coords_ui.font.render(
-            f"x: {self.player.x}, y: {self.player.y}, vel:{self.player.velocity}", True, (0,0,0), None)
+            f" x: {self.player.x}, y: {self.player.y}, vel:{self.player.velocity}", True, (0,0,0), None)
         self.coords_ui.drawText()
 
     def drawOtherPlayers(self):
         for coords in self.otherPlayersPos:
-            pygame.draw.rect(self.surface,(0,0,0),self.camera.caclPos(*coords)+(100,100))
+            pygame.draw.rect(self.surface,(0,0,0),self.camera.caclRawRectDimension(*coords,100,100))
+
 
 
     def init(self):

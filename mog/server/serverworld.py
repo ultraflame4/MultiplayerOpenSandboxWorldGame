@@ -1,7 +1,10 @@
 import ast
+import math
 import typing
 import threading
 import time
+
+from mog import networkConstants
 
 
 def invoke(func,delay=0):
@@ -23,8 +26,22 @@ class Player:
 
     def sendOtherPlayerPos(self,pos_dict):
         del pos_dict[str(self.client.id)]
+
+        # When True Filter to show only players in a specific distance
+        filterPlayerPositions=True
+        if filterPlayerPositions:
+            filtered = False
+            for k, v in pos_dict.copy().items():
+                if math.dist(v, self.pos) > 1000:
+                    del pos_dict[k]
+                    filtered=True
+
+            if filtered:
+                self.client.send(networkConstants.players_clear)
+
         if len(pos_dict) > 0:
-            self.client.send(f'players/pos:{pos_dict}')
+
+            self.client.send(f'{networkConstants.players_pos}:{pos_dict}')
 
 
 
@@ -43,7 +60,7 @@ class World:
         print("removing player ( Client:",client.id,")")
         del self.players[client.id]
         for p in self.players.values():
-            p.client.send("players/clear")
+            p.client.send(networkConstants.players_clear)
 
     def sendPosToAllPlayers(self):
         all_pos = {str(k):v.pos for k,v in self.players.items()}

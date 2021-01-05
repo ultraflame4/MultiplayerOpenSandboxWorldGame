@@ -1,11 +1,12 @@
 import threading
 import socket
 
-from mog import EventsHandler
+from mog import EventsHandler, networkConstants
+
 
 class DataCallbacks:
     players_pos=None
-    players_clear=None
+    players_clear=lambda :print("Warning In network.py: DataCallbacks.players_clear func is not set")
 
 
 class ConnectionHandler:
@@ -43,7 +44,7 @@ class ConnectionHandler:
     def stopListener(event):
         ConnectionHandler.listening=False
         if ConnectionHandler.client is not None:
-            ConnectionHandler.send("client/exit")
+            ConnectionHandler.send(networkConstants.client_exit)
             ConnectionHandler.client.close()
 
 
@@ -65,10 +66,10 @@ class ConnectionHandler:
                     else:
                         dt=None
 
-                    if dtype == "players/pos":
+                    if dtype == networkConstants.players_pos:
                         DataCallbacks.players_pos(dt)
 
-                    elif dtype == "players/clear":
+                    elif dtype == networkConstants.players_clear:
                         DataCallbacks.players_clear()
 
 
